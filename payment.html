@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - ShopNow</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f8f9fa; }
+        .container { max-width: 600px; margin: 0 auto; }
+        header { background: #4f46e5; color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
+        .order-summary, .payment-method { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .order-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .order-total { font-size: 1.2em; font-weight: bold; margin-top: 10px; padding-top: 10px; border-top: 2px solid #4f46e5; }
+        button { background: #4f46e5; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; width: 100%; font-size: 16px; }
+        .back-btn { background: #6c757d; margin-top: 10px; }
+        .payment-options { display: flex; gap: 10px; margin-bottom: 20px; }
+        .payment-option { flex: 1; text-align: center; padding: 15px; border: 2px solid #ddd; border-radius: 5px; cursor: pointer; }
+        .payment-option.active { border-color: #4f46e5; background: #f0f0ff; }
+        .hidden { display: none; }
+        .qr-section { text-align: center; margin: 20px 0; }
+        .qr-code { width: 200px; height: 200px; margin: 15px auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: white; }
+        .qr-code img { width: 100%; height: 100%; object-fit: contain; }
+        .qr-instructions { background: #f8f9ff; padding: 15px; border-radius: 5px; margin: 15px 0; font-size: 14px; text-align: left; }
+        .qr-instructions ol { margin-left: 20px; margin-top: 5px; }
+        .qr-instructions li { margin-bottom: 5px; }
+        .mobile-hint { background: #e8f5e9; padding: 10px; border-radius: 5px; margin: 10px 0; font-size: 14px; display: flex; align-items: center; }
+        .mobile-hint::before { content: "📱"; margin-right: 10px; font-size: 18px; }
+        .loading { display: none; text-align: center; margin: 20px 0; }
+        .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #4f46e5; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .success-message { background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .error-message { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .file-upload-info { font-size: 12px; color: #666; margin-top: 5px; }
+        .required { color: red; }
+        .preview { margin: 10px 0; text-align: center; }
+        .preview img { max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 5px; }
+        .email-note { 
+            background: #f0f9ff; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin: 20px 0; 
+            border-left: 4px solid #3b82f6;
+            text-align: center;
+        }
+        .email-note-icon { 
+            font-size: 40px; 
+            margin-bottom: 10px; 
+            color: #3b82f6;
+        }
+        .email-note strong { 
+            color: #1e40af; 
+            display: block; 
+            margin-bottom: 10px; 
+            font-size: 18px;
+        }
+        .email-button { 
+            background: #ea4335; 
+            color: white; 
+            padding: 14px 20px; 
+            border-radius: 5px; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 16px; 
+            width: 100%; 
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .email-button:hover { 
+            background: #d23e31; 
+        }
+        .email-button.gmail { background: #ea4335; }
+        .email-button.outlook { background: #0078d4; margin-top: 5px; }
+        .email-button.yahoo { background: #720e9e; margin-top: 5px; }
+        .email-options { margin: 15px 0; }
+        .email-option { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 10px 0; 
+            border: 1px solid #e5e7eb;
+        }
+        .step-number {
+            background: #4f46e5;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Complete Your Payment</h1>
+            <p>Order ID: <span id="orderId">SHOP-0001</span></p>
+        </header>
+        
+        <div class="order-summary">
+            <h3>Order Summary</h3>
+            <div id="orderItems">
+                <!-- Order items will load here -->
+            </div>
+            <div id="orderTotal" class="order-total">Total: $0.00</div>
+        </div>
+        
+        <div class="payment-method">
+            <h3>Select Payment Method</h3>
+            <div class="payment-options">
+		<div class="payment-option active" onclick="selectPayment('gcash', this)">GCash</div>
+		<div class="payment-option" onclick="selectPayment('card', this)">Credit Card</div>
+		<div class="payment-option" onclick="selectPayment('bank', this)">Bank Transfer</div>
+
+            </div>
+            
+            <div id="gcashForm">
+                <h4>GCash Payment</h4>
+                
+                <div class="qr-section">
+                    <p>Scan QR code to pay instantly:</p>
+                    <div class="qr-code">
+                        <img src="images/qr.jpg" alt="GCash QR Code" onerror="handleQRerror()">
+                    </div>
+                    <p>Or send payment to: <strong>0917-123-4567</strong></p>
+                </div>
+                
+                <div class="qr-instructions">
+                    <strong>How to pay:</strong>
+                    <ol>
+                        <li>Open GCash app and tap "Scan QR"</li>
+                        <li>Scan the QR code above</li>
+                        <li>Enter amount: <strong id="qrAmount">$0.00</strong></li>
+                        <li>Add reference: <strong id="gcashReference">SHOP-0001</strong></li>
+                        <li>Confirm payment</li>
+                    </ol>
+                </div>
+                
+                <div class="mobile-hint">
+                    On mobile? Tap and hold the QR code to save it, then open with GCash.
+                </div>
+                
+                <div class="email-note">
+                    <div class="email-note-icon">📧</div>
+                    <strong>Send Payment Proof via Email</strong>
+                    <p>After making the payment, please send your proof of payment to:</p>
+                    <p style="font-size: 16px; background: white; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                        <strong>leecasiopea45@gmail.com</strong>
+                    </p>
+                    
+                    <div class="email-options">
+                        <div class="email-option">
+                            <div><span class="step-number">1</span> <strong>Make the payment</strong></div>
+                            <p style="margin: 5px 0 0 34px;">Complete the transaction using the instructions above</p>
+                        </div>
+                        
+                        <div class="email-option">
+                            <div><span class="step-number">2</span> <strong>Take a screenshot</strong></div>
+                            <p style="margin: 5px 0 0 34px;">Capture your payment confirmation screen</p>
+                        </div>
+                        
+                        <div class="email-option">
+                            <div><span class="step-number">3</span> <strong>Send via email</strong></div>
+                            <p style="margin: 5px 0 0 34px;">Click the button below to open your email with pre-filled details</p>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <button onclick="openGmailWithDetails()" class="email-button gmail">
+                            📧 Open Gmail to Send Proof
+                        </button>
+                        <div style="font-size: 14px; color: #666; margin-top: 10px;">
+                            Or use: 
+                            <button onclick="openOutlookWithDetails()" style="background: none; border: none; color: #0078d4; cursor: pointer; padding: 5px; font-size: 14px;">Outlook</button> | 
+                            <button onclick="openYahooWithDetails()" style="background: none; border: none; color: #720e9e; cursor: pointer; padding: 5px; font-size: 14px;">Yahoo Mail</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <p><strong>Customer Email for Receipt:</strong></p>
+                <input type="email" id="customerEmail" placeholder="your-email@example.com" style="width: 100%; padding: 10px; margin: 5px 0;">
+            </div>
+            
+            <div id="cardForm" class="hidden">
+                <h4>Credit Card Payment</h4>
+                <input type="text" placeholder="Card Number" id="cardNumber" style="width: 100%; padding: 10px; margin: 5px 0;">
+                <input type="text" placeholder="MM/YY" id="cardExpiry" style="width: 48%; padding: 10px; margin: 5px 1% 5px 0;">
+                <input type="text" placeholder="CVV" id="cardCVV" style="width: 48%; padding: 10px; margin: 5px 0 5px 1%;">
+                <input type="text" placeholder="Cardholder Name" id="cardName" style="width: 100%; padding: 10px; margin: 5px 0;">
+                <input type="email" id="cardEmail" placeholder="Email for receipt" style="width: 100%; padding: 10px; margin: 5px 0;">
+                
+                <div class="email-note">
+                    <div class="email-note-icon">📧</div>
+                    <strong>Send Payment Confirmation</strong>
+                    <p>After payment is complete, please send your confirmation to:</p>
+                    <p style="font-size: 16px; background: white; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                        <strong>leecasiopea45@gmail.com</strong>
+                    </p>
+                    <button onclick="openGmailWithDetails()" class="email-button gmail">
+                        📧 Open Gmail to Send Proof
+                    </button>
+                </div>
+            </div>
+            
+            <div id="bankForm" class="hidden">
+                <h4>Bank Transfer</h4>
+                <p>Bank: BPI</p>
+                <p>Account: 1234-5678-90</p>
+                <p>Account Name: ShopNow Store</p>
+                <p>Reference: <strong id="bankReference">SHOP-0001</strong></p>
+                <p>Amount: <strong id="bankAmount">$0.00</strong></p>
+                
+                <div class="email-note">
+                    <div class="email-note-icon">📧</div>
+                    <strong>Send Payment Proof via Email</strong>
+                    <p>After making the transfer, please send your proof of payment to:</p>
+                    <p style="font-size: 16px; background: white; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                        <strong>leecasiopea45@gmail.com</strong>
+                    </p>
+                    <button onclick="openGmailWithDetails()" class="email-button gmail">
+                        📧 Open Gmail to Send Proof
+                    </button>
+                </div>
+                
+                <p><strong>Customer Email for Receipt:</strong></p>
+                <input type="email" id="bankEmail" placeholder="your-email@example.com" style="width: 100%; padding: 10px; margin: 5px 0;">
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p id="loadingText">Processing order...</p>
+            </div>
+            
+            <div id="errorMessage" class="error-message hidden"></div>
+            
+            <button onclick="processPayment()" id="completePaymentBtn">Complete Order</button>
+            <button class="back-btn" onclick="goBackToCart()">Back to Cart</button>
+        </div>
+        
+        <div id="paymentStatus" class="hidden" style="text-align: center; padding: 20px; background: #d4edda; border-radius: 10px;">
+            <h3>Order Submitted Successfully! ✅</h3>
+            <p>Thank you for your purchase.</p>
+            <p>Order ID: <strong id="successOrderId"></strong></p>
+            <p>Total Amount: <strong id="finalTotal"></strong></p>
+            
+            <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: left;">
+                <div style="display: flex; align-items: start; margin-bottom: 15px;">
+                    <div style="background: #3b82f6; color: white; padding: 5px 10px; border-radius: 50%; margin-right: 10px;">📧</div>
+                    <div>
+                        <h4 style="margin: 0 0 10px 0; color: #1e40af;">Next Step: Send Payment Proof</h4>
+                        <p style="margin: 0;">Click below to open your email with pre-filled details:</p>
+                        
+                        <div style="margin: 15px 0;">
+                            <button onclick="openGmailWithDetails()" class="email-button gmail" style="width: 100%;">
+                                📧 Open Gmail to Send Proof
+                            </button>
+                            
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <button onclick="openOutlookWithDetails()" class="email-button outlook" style="flex: 1;">
+                                    Outlook
+                                </button>
+                                <button onclick="openYahooWithDetails()" class="email-button yahoo" style="flex: 1;">
+                                    Yahoo Mail
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div style="background: white; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #10b981;">
+                            <strong>What will be included:</strong>
+                            <ul style="margin: 10px 0 0 20px; padding: 0;">
+                                <li>Your Order ID</li>
+                                <li>Payment method used</li>
+                                <li>Total amount paid</li>
+                                <li>Email for receipt</li>
+                                <li>Order items list</li>
+                            </ul>
+                        </div>
+                        
+                        <p style="font-size: 14px; color: #666; margin-top: 10px;">
+                            <strong>Note:</strong> Don't forget to attach your payment proof screenshot!
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <p>You will receive a confirmation email once payment is verified.</p>
+            <button onclick="goToHome()" style="background: #4f46e5; color: white; padding: 12px 30px; border: none; border-radius: 5px; margin-top: 10px; cursor: pointer;">
+                Back to Home
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIGURATION ====================
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby1DYlAu5Ofxwy02JZOTiz8owYLkHbkMz3dh5AIHGn5tNMjIzPGhY-2ho3m3Ye0Zke4qg/exec';
+        const ADMIN_EMAIL = 'leecasiopea45@gmail.com';
+        // =======================================================
+        
+        // Generate order ID
+        function generateOrderId() {
+            const timestamp = Date.now().toString().slice(-6);
+            const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            return `SHOP-${timestamp}${random}`;
+        }
+        
+        // Load cart data from localStorage
+        function loadCartData() {
+            try {
+                const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                const cartTotal = localStorage.getItem('cartTotal') || '0.00';
+                return { cart, cartTotal };
+            } catch (error) {
+                console.error('Error loading cart data:', error);
+                return { cart: [], cartTotal: '0.00' };
+            }
+        }
+        
+        // Display order summary
+        function displayOrderSummary() {
+            const { cart, cartTotal } = loadCartData();
+            const orderId = generateOrderId();
+            
+            // Update all references
+            document.getElementById('orderId').textContent = orderId;
+            document.getElementById('gcashReference').textContent = orderId;
+            document.getElementById('bankReference').textContent = orderId;
+            document.getElementById('successOrderId').textContent = orderId;
+            
+            // Update amounts
+            document.getElementById('qrAmount').textContent = `$${parseFloat(cartTotal).toFixed(2)}`;
+            document.getElementById('bankAmount').textContent = `$${parseFloat(cartTotal).toFixed(2)}`;
+            
+            const orderItems = document.getElementById('orderItems');
+            const orderTotal = document.getElementById('orderTotal');
+            
+            if (cart.length === 0) {
+                orderItems.innerHTML = '<p style="color: #666; text-align: center;">No items in cart</p>';
+                orderTotal.textContent = 'Total: $0.00';
+                return;
+            }
+            
+            let html = '';
+            cart.forEach(item => {
+                html += `
+                    <div class="order-item">
+                        <span>${item.name} x${item.quantity}</span>
+                        <span>$${(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                `;
+            });
+            
+            orderItems.innerHTML = html;
+            orderTotal.textContent = `Total: $${parseFloat(cartTotal).toFixed(2)}`;
+        }
+        
+        // Get customer email based on payment method
+        function getCustomerEmail() {
+            const activeMethod = document.querySelector('.payment-option.active').textContent.toLowerCase();
+            
+            if (activeMethod.includes('gcash')) {
+                return document.getElementById('customerEmail').value;
+            } else if (activeMethod.includes('card')) {
+                return document.getElementById('cardEmail').value;
+            } else if (activeMethod.includes('bank')) {
+                return document.getElementById('bankEmail').value;
+            }
+            
+            return '';
+        }
+        
+        // Get selected payment method
+        function getPaymentMethod() {
+            return document.querySelector('.payment-option.active').textContent;
+        }
+        
+        // Get order items as formatted text
+        function getOrderItemsText() {
+            const { cart } = loadCartData();
+            let itemsText = '';
+            cart.forEach(item => {
+                itemsText += `• ${item.name} x${item.quantity} - $${(item.price * item.quantity).toFixed(2)}\n`;
+            });
+            return itemsText;
+        }
+        
+        // Generate email content
+        function generateEmailContent() {
+            const { cartTotal } = loadCartData();
+            const orderId = document.getElementById('orderId').textContent;
+            const paymentMethod = getPaymentMethod();
+            const customerEmail = getCustomerEmail();
+            const itemsText = getOrderItemsText();
+            const date = new Date().toLocaleString();
+            
+            return {
+                subject: `Payment Proof for Order ${orderId} - $${parseFloat(cartTotal).toFixed(2)}`,
+                body: `Hello,
+
+Please find attached my payment proof for:
+
+Order Details:
+• Order ID: ${orderId}
+• Total Amount: $${parseFloat(cartTotal).toFixed(2)}
+• Payment Method: ${paymentMethod}
+• Customer Email: ${customerEmail || 'Not provided'}
+• Date: ${date}
+
+Order Items:
+${itemsText}
+
+I have attached my payment proof screenshot/photo.
+
+Thank you!
+[Sent via ShopNow Payment System]`
+            };
+        }
+        
+        // Open Gmail with pre-filled details
+        function openGmailWithDetails() {
+            const { cartTotal } = loadCartData();
+            const orderId = document.getElementById('orderId').textContent;
+            const emailContent = generateEmailContent();
+            
+            const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(ADMIN_EMAIL)}&su=${encodeURIComponent(emailContent.subject)}&body=${encodeURIComponent(emailContent.body)}`;
+            
+            window.open(gmailUrl, '_blank');
+            
+            // Track email opening
+            console.log(`📧 Opening Gmail for order ${orderId}`);
+            saveEmailAction('gmail_opened', orderId);
+        }
+        
+        // Open Outlook with pre-filled details
+        function openOutlookWithDetails() {
+            const { cartTotal } = loadCartData();
+            const orderId = document.getElementById('orderId').textContent;
+            const emailContent = generateEmailContent();
+            
+            const outlookUrl = `https://outlook.live.com/mail/0/deeplink/compose?to=${encodeURIComponent(ADMIN_EMAIL)}&subject=${encodeURIComponent(emailContent.subject)}&body=${encodeURIComponent(emailContent.body)}`;
+            
+            window.open(outlookUrl, '_blank');
+            saveEmailAction('outlook_opened', orderId);
+        }
+        
+        // Open Yahoo Mail with pre-filled details
+        function openYahooWithDetails() {
+            const { cartTotal } = loadCartData();
+            const orderId = document.getElementById('orderId').textContent;
+            const emailContent = generateEmailContent();
+            
+            const yahooUrl = `https://compose.mail.yahoo.com/?to=${encodeURIComponent(ADMIN_EMAIL)}&subject=${encodeURIComponent(emailContent.subject)}&body=${encodeURIComponent(emailContent.body)}`;
+            
+            window.open(yahooUrl, '_blank');
+            saveEmailAction('yahoo_opened', orderId);
+        }
+        
+        // Save email action to localStorage
+        function saveEmailAction(action, orderId) {
+            try {
+                const emailActions = JSON.parse(localStorage.getItem('emailActions')) || [];
+                emailActions.push({
+                    action: action,
+                    orderId: orderId,
+                    timestamp: new Date().toISOString()
+                });
+                localStorage.setItem('emailActions', JSON.stringify(emailActions));
+            } catch (error) {
+                console.error('Error saving email action:', error);
+            }
+        }
+        
+        // Select payment method
+        function selectPayment(method) {
+            document.querySelectorAll('.payment-option').forEach(opt => {
+                opt.classList.remove('active');
+            });
+            
+            document.getElementById('gcashForm').classList.add('hidden');
+            document.getElementById('cardForm').classList.add('hidden');
+            document.getElementById('bankForm').classList.add('hidden');
+            
+            event.target.classList.add('active');
+            const form = document.getElementById(method + 'Form');
+            form.classList.remove('hidden');
+        }
+        
+        // Handle QR code image error
+        function handleQRerror() {
+            const qrContainer = document.querySelector('.qr-code');
+            qrContainer.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px;">
+                    <div style="font-size: 24px; margin-bottom: 10px;">📱</div>
+                    <div style="font-size: 12px; color: #666; text-align: center;">
+                        QR Code Image (qr.jpg)<br>
+                        <span style="font-size: 10px;">Place qr.jpg in same folder</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Validate form
+        function validateForm() {
+            const { cart } = loadCartData();
+            
+            if (cart.length === 0) {
+                showError('Your cart is empty!');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            setTimeout(() => errorDiv.classList.add('hidden'), 5000);
+        }
+        
+        // Process payment - TEXT DATA ONLY
+        async function processPayment() {
+            const { cart, cartTotal } = loadCartData();
+            
+            if (!validateForm()) {
+                return;
+            }
+            
+            const activeMethod = getPaymentMethod();
+            const customerEmail = getCustomerEmail();
+            
+            // Prepare order data (TEXT ONLY)
+            const orderId = document.getElementById('orderId').textContent;
+            const orderData = {
+                orderId: orderId,
+                paymentMethod: activeMethod,
+                total: cartTotal,
+                customerEmail: customerEmail,
+                items: JSON.stringify(cart.map(item => ({
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: parseFloat(item.price).toFixed(2)
+                })))
+            };
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('completePaymentBtn').disabled = true;
+            document.getElementById('errorMessage').classList.add('hidden');
+            
+            try {
+                // Update loading text
+                document.getElementById('loadingText').textContent = 'Submitting order details...';
+                
+                // SEND TEXT DATA TO GOOGLE SHEET
+                const textSuccess = await sendTextDataToSheet(orderData);
+                
+                if (textSuccess) {
+                    // Text data submitted successfully
+                    setTimeout(() => {
+                        completeOrderProcess(orderId, cartTotal);
+                    }, 1000);
+                    
+                } else {
+                    throw new Error('Failed to submit order details');
+                }
+                
+            } catch (error) {
+                console.error('Payment error:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('completePaymentBtn').disabled = false;
+                showError('Failed to submit order details. Please try again.');
+            }
+        }
+        
+        // Send only text data to Google Sheets
+async function sendTextDataToSheet(orderData) {
+    try {
+        const formData = new FormData();
+        formData.append('orderId', orderData.orderId);
+        formData.append('customerEmail', orderData.customerEmail || 'Not provided');
+        formData.append('paymentMethod', orderData.paymentMethod);
+        formData.append('totalAmount', `$${orderData.total}`);
+        formData.append('items', orderData.items);
+        formData.append('status', 'Pending Payment Proof');
+        formData.append('date', new Date().toLocaleString());
+        formData.append('emailOpened', 'No');
+
+        // ✅ PUT YOUR CODE HERE
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to connect to Google Script');
+        }
+
+        const text = await response.text();
+	console.log('Google Script response:', text);
+
+	return text.includes('success') || text.includes('saved');
+
+
+    } catch (error) {
+        console.error('Error sending text data:', error);
+        return false;
+    }
+}
+        
+        // Complete order process
+        function completeOrderProcess(orderId, cartTotal) {
+            // Save locally
+            const { cart } = loadCartData();
+            const completedOrders = JSON.parse(localStorage.getItem('completedOrders')) || [];
+            completedOrders.push({
+                orderId: orderId,
+                date: new Date().toISOString(),
+                total: cartTotal,
+                items: cart,
+                paymentMethod: getPaymentMethod()
+            });
+            localStorage.setItem('completedOrders', JSON.stringify(completedOrders));
+            
+            // Clear cart
+            localStorage.removeItem('cart');
+            localStorage.removeItem('cartTotal');
+            
+            // Update final order ID and total in success message
+            document.getElementById('successOrderId').textContent = orderId;
+            document.getElementById('finalTotal').textContent = `$${parseFloat(cartTotal).toFixed(2)}`;
+            
+            // Show success section
+            document.querySelector('.payment-method').classList.add('hidden');
+            document.getElementById('paymentStatus').classList.remove('hidden');
+            
+            console.log(`✅ Order ${orderId} submitted successfully`);
+        }
+        
+        // Navigation functions
+        function goBackToCart() {
+            window.history.back();
+        }
+        
+        function goToHome() {
+            window.location.href = 'index.html';
+        }
+        
+        // Initialize on page load
+        window.onload = function() {
+            displayOrderSummary();
+            selectPayment('gcash');
+            
+            // Test connection
+            console.log('Testing Google Script connection...');
+            fetch(GOOGLE_SCRIPT_URL)
+                .then(() => console.log('✅ Connected to Google Script'))
+                .catch(err => console.warn('⚠️ Connection test failed:', err.message));
+        };
+    </script>
+<!-- At the end of body, before closing </body> tag -->
+<script src="js/payment.js"></script>
+</body>
+</html>

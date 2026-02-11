@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule Sessions - VIK&RHYME Tutorial Services</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500' rel='stylesheet' type='text/css'>
+    <style>
+        body {
+            background: #f5f5f5;
+            padding-top: 80px;
+        }
+        .schedule-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .schedule-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .schedule-header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            gap: 20px;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #666;
+        }
+        .step.active .step-number {
+            background: #667eea;
+            color: white;
+        }
+        .step.completed .step-number {
+            background: #4CAF50;
+            color: white;
+        }
+        .card-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .card-section h3 {
+            margin-bottom: 25px;
+            color: #333;
+            font-weight: bold;
+        }
+        .course-card {
+            border: 2px solid #e0e0e0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .course-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102,126,234,0.2);
+        }
+        .course-card.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        .course-card h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .course-card p {
+            margin: 5px 0;
+            color: #666;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .calendar-header {
+            text-align: center;
+            font-weight: bold;
+            padding: 10px;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+        }
+        .calendar-day {
+            text-align: center;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .calendar-day:hover:not(.disabled) {
+            background: #f0f4ff;
+            border-color: #667eea;
+        }
+        .calendar-day.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .calendar-day.disabled {
+            background: #f5f5f5;
+            color: #ccc;
+            cursor: not-allowed;
+        }
+        .time-slot {
+            display: inline-block;
+            padding: 12px 20px;
+            margin: 5px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .time-slot:hover:not(.disabled) {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        .time-slot.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .time-slot.disabled {
+            background: #f5f5f5;
+            color: #ccc;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+        .summary-box {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+        .btn-schedule {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        .btn-schedule:hover {
+            background: #5568d3;
+        }
+        .btn-schedule:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .preference-option {
+            margin-bottom: 15px;
+        }
+        .preference-option label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .preference-option input[type="radio"] {
+            margin-right: 10px;
+        }
+        .preference-option label:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        .preference-option input[type="radio"]:checked + label {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        @media (max-width: 768px) {
+            .calendar-grid {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 5px;
+            }
+            .calendar-day {
+                padding: 10px 5px;
+                font-size: 12px;
+                min-height: 50px;
+            }
+            .step-indicator {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-fixed-top" style="background: #333; padding: 15px 0;">
+        <div class="container">
+            <div class="navbar-header">
+                <button class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse" style="background: #fff;">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a href="index.html" class="navbar-brand" style="color: #fff;">VIK&RHYME TUTORIAL SERVICES</a>
+            </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="index.html" style="color: #fff;">Home</a></li>
+                    <li><a href="enrollment.html" style="color: #fff;">My Enrollments</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="schedule-container">
+        <!-- Header -->
+        <div class="schedule-header">
+            <h1><i class="fa fa-calendar"></i> Schedule Your Sessions</h1>
+            <p>Choose your preferred dates and times for your tutorial sessions</p>
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step active" id="step1Indicator">
+                <div class="step-number">1</div>
+                <span>Select Course</span>
+            </div>
+            <div class="step" id="step2Indicator">
+                <div class="step-number">2</div>
+                <span>Choose Schedule</span>
+            </div>
+            <div class="step" id="step3Indicator">
+                <div class="step-number">3</div>
+                <span>Confirm & Pay</span>
+            </div>
+        </div>
+
+        <!-- Step 1: Select Course -->
+        <div class="card-section" id="step1">
+            <h3>Step 1: Select Course to Schedule</h3>
+            <div id="enrolledCourses">
+                <!-- Courses will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Step 2: Choose Schedule -->
+        <div class="card-section" id="step2" style="display: none;">
+            <h3>Step 2: Choose Your Schedule Preference</h3>
+            
+            <div class="preference-option">
+                <input type="radio" name="scheduleType" id="recurring" value="recurring" checked>
+                <label for="recurring">
+                    <div>
+                        <strong>Recurring Weekly Sessions</strong>
+                        <p style="margin: 5px 0 0 0; color: #666;">Same day and time every week</p>
+                    </div>
+                </label>
+            </div>
+
+            <div class="preference-option">
+                <input type="radio" name="scheduleType" id="flexible" value="flexible">
+                <label for="flexible">
+                    <div>
+                        <strong>Flexible Scheduling</strong>
+                        <p style="margin: 5px 0 0 0; color: #666;">Book individual sessions as needed</p>
+                    </div>
+                </label>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <h4>Select Preferred Day(s)</h4>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
+                    <button class="time-slot" onclick="toggleDay(this, 'Monday')">Monday</button>
+                    <button class="time-slot" onclick="toggleDay(this, 'Tuesday')">Tuesday</button>
+                    <button class="time-slot" onclick="toggleDay(this, 'Wednesday')">Wednesday</button>
+                    <button class="time-slot" onclick="toggleDay(this, 'Thursday')">Thursday</button>
+                    <button class="time-slot" onclick="toggleDay(this, 'Friday')">Friday</button>
+                    <button class="time-slot" onclick="toggleDay(this, 'Saturday')">Saturday</button>
+                    <button class="time-slot" onclick="toggleDay(this, 'Sunday')">Sunday</button>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <h4>Select Preferred Time(s)</h4>
+                <div style="margin-top: 15px;">
+                    <strong>Morning (8 AM - 12 PM)</strong>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0;">
+                        <button class="time-slot" onclick="toggleTime(this, '8:00 AM')">8:00 AM</button>
+                        <button class="time-slot" onclick="toggleTime(this, '9:00 AM')">9:00 AM</button>
+                        <button class="time-slot" onclick="toggleTime(this, '10:00 AM')">10:00 AM</button>
+                        <button class="time-slot" onclick="toggleTime(this, '11:00 AM')">11:00 AM</button>
+                    </div>
+
+                    <strong>Afternoon (12 PM - 6 PM)</strong>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0;">
+                        <button class="time-slot" onclick="toggleTime(this, '12:00 PM')">12:00 PM</button>
+                        <button class="time-slot" onclick="toggleTime(this, '1:00 PM')">1:00 PM</button>
+                        <button class="time-slot" onclick="toggleTime(this, '2:00 PM')">2:00 PM</button>
+                        <button class="time-slot" onclick="toggleTime(this, '3:00 PM')">3:00 PM</button>
+                        <button class="time-slot" onclick="toggleTime(this, '4:00 PM')">4:00 PM</button>
+                        <button class="time-slot" onclick="toggleTime(this, '5:00 PM')">5:00 PM</button>
+                    </div>
+
+                    <strong>Evening (6 PM - 10 PM)</strong>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0;">
+                        <button class="time-slot" onclick="toggleTime(this, '6:00 PM')">6:00 PM</button>
+                        <button class="time-slot" onclick="toggleTime(this, '7:00 PM')">7:00 PM</button>
+                        <button class="time-slot" onclick="toggleTime(this, '8:00 PM')">8:00 PM</button>
+                        <button class="time-slot" onclick="toggleTime(this, '9:00 PM')">9:00 PM</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <label for="sessionDuration"><strong>Session Duration:</strong></label>
+                <select id="sessionDuration" class="form-control" style="margin-top: 10px;">
+                    <option value="60">60 minutes (Standard)</option>
+                    <option value="90">90 minutes (Extended)</option>
+                    <option value="120">120 minutes (Intensive)</option>
+                </select>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <label for="startDate"><strong>Preferred Start Date:</strong></label>
+                <input type="date" id="startDate" class="form-control" style="margin-top: 10px;">
+            </div>
+
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button class="btn btn-default" onclick="showStep(1)">
+                    <i class="fa fa-arrow-left"></i> Back
+                </button>
+                <button class="btn btn-danger" style="flex: 1;" onclick="showStep(3)">
+                    Continue to Confirmation <i class="fa fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 3: Confirm & Pay -->
+        <div class="card-section" id="step3" style="display: none;">
+            <h3>Step 3: Confirm Your Schedule</h3>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="summary-box">
+                        <h4 style="margin-top: 0;">Booking Summary</h4>
+                        <div class="summary-item">
+                            <strong>Course:</strong>
+                            <span id="summaryCourse">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <strong>Instructor:</strong>
+                            <span id="summaryInstructor">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <strong>Schedule Type:</strong>
+                            <span id="summaryScheduleType">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <strong>Selected Day(s):</strong>
+                            <span id="summaryDays">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <strong>Preferred Time(s):</strong>
+                            <span id="summaryTimes">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <strong>Session Duration:</strong>
+                            <span id="summaryDuration">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <strong>Start Date:</strong>
+                            <span id="summaryStartDate">-</span>
+                        </div>
+                        <div class="summary-item" style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #667eea;">
+                            <strong style="font-size: 18px; color: #667eea;">Sessions per Month:</strong>
+                            <span style="font-size: 18px; color: #667eea;"><strong>4</strong></span>
+                        </div>
+                        <div class="summary-item">
+                            <strong style="font-size: 20px; color: #667eea;">Estimated Monthly Cost:</strong>
+                            <span id="summaryTotal" style="font-size: 24px; color: #667eea;"><strong>$0.00</strong></span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffc107;">
+                        <i class="fa fa-info-circle" style="color: #856404;"></i>
+                        <strong style="color: #856404;"> Important Notes:</strong>
+                        <ul style="margin: 10px 0 0 20px; color: #856404;">
+                            <li>Your instructor will contact you within 24 hours to confirm the schedule</li>
+                            <li>You can reschedule sessions up to 24 hours in advance</li>
+                            <li>Payment is required to confirm your booking</li>
+                            <li>First session is risk-free - get a full refund if not satisfied</li>
+                        </ul>
+                    </div>
+
+                    <div style="margin-top: 20px; display: flex; gap: 10px;">
+                        <button class="btn btn-default" onclick="showStep(2)">
+                            <i class="fa fa-arrow-left"></i> Back
+                        </button>
+                        <button class="btn-schedule" style="flex: 1; margin-top: 0;" onclick="confirmBooking()">
+                            <i class="fa fa-check"></i> Confirm & Proceed to Payment
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div style="background: white; padding: 20px; border-radius: 8px; border: 2px solid #e0e0e0;">
+                        <h4>Payment Options</h4>
+                        <div style="margin: 15px 0;">
+                            <label style="display: flex; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer;">
+                                <input type="radio" name="payment" checked style="margin-right: 10px;">
+                                <i class="fa fa-credit-card" style="margin-right: 10px; font-size: 20px;"></i>
+                                Credit/Debit Card
+                            </label>
+                        </div>
+                        <div style="margin: 15px 0;">
+                            <label style="display: flex; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer;">
+                                <input type="radio" name="payment" style="margin-right: 10px;">
+                                <i class="fa fa-paypal" style="margin-right: 10px; font-size: 20px;"></i>
+                                PayPal
+                            </label>
+                        </div>
+                        <div style="margin: 15px 0;">
+                            <label style="display: flex; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer;">
+                                <input type="radio" name="payment" style="margin-right: 10px;">
+                                <i class="fa fa-bank" style="margin-right: 10px; font-size: 20px;"></i>
+                                Bank Transfer
+                            </label>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; padding: 15px; background: #d4edda; border-radius: 8px; border: 1px solid #28a745;">
+                        <i class="fa fa-shield" style="color: #155724;"></i>
+                        <strong style="color: #155724;"> Secure Payment</strong>
+                        <p style="margin: 10px 0 0 0; color: #155724; font-size: 13px;">
+                            Your payment information is encrypted and secure
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedCourse = null;
+        let selectedDays = [];
+        let selectedTimes = [];
+
+        // Load enrolled courses
+        function loadEnrolledCourses() {
+            const enrollments = JSON.parse(localStorage.getItem('enrollments')) || [];
+            const coursesContainer = document.getElementById('enrolledCourses');
+            
+            if (enrollments.length === 0) {
+                coursesContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fa fa-graduation-cap" style="font-size: 60px; color: #ddd;"></i>
+                        <h3>No courses enrolled yet</h3>
+                        <p>Please enroll in a course first to schedule sessions.</p>
+                        <a href="index.html#courses" class="btn btn-danger">Browse Courses</a>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            enrollments.forEach((course, index) => {
+                html += `
+                    <div class="course-card" onclick="selectCourse(${index})">
+                        <div style="display: flex; gap: 20px; align-items: center;">
+                            <img src="${course.image}" alt="${course.title}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                            <div style="flex: 1;">
+                                <h4>${course.title}</h4>
+                                <p><strong>Instructor:</strong> ${course.instructor}</p>
+                                <p><strong>Duration:</strong> ${course.duration}</p>
+                                <p style="color: #667eea; font-weight: bold;">${course.price}</p>
+                            </div>
+                            <i class="fa fa-arrow-right" style="font-size: 24px; color: #667eea;"></i>
+                        </div>
+                    </div>
+                `;
+            });
+
+            coursesContainer.innerHTML = html;
+        }
+
+        function selectCourse(index) {
+            const enrollments = JSON.parse(localStorage.getItem('enrollments')) || [];
+            selectedCourse = enrollments[index];
+            
+            // Highlight selected course
+            document.querySelectorAll('.course-card').forEach((card, i) => {
+                card.classList.toggle('selected', i === index);
+            });
+
+            // Move to next step
+            setTimeout(() => showStep(2), 300);
+        }
+
+        function toggleDay(button, day) {
+            button.classList.toggle('selected');
+            const index = selectedDays.indexOf(day);
+            if (index > -1) {
+                selectedDays.splice(index, 1);
+            } else {
+                selectedDays.push(day);
+            }
+        }
+
+        function toggleTime(button, time) {
+            button.classList.toggle('selected');
+            const index = selectedTimes.indexOf(time);
+            if (index > -1) {
+                selectedTimes.splice(index, 1);
+            } else {
+                selectedTimes.push(time);
+            }
+        }
+
+        function showStep(stepNumber) {
+            // Hide all steps
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('step3').style.display = 'none';
+
+            // Update step indicators
+            document.getElementById('step1Indicator').classList.remove('active', 'completed');
+            document.getElementById('step2Indicator').classList.remove('active', 'completed');
+            document.getElementById('step3Indicator').classList.remove('active', 'completed');
+
+            // Show current step
+            document.getElementById(`step${stepNumber}`).style.display = 'block';
+            document.getElementById(`step${stepNumber}Indicator`).classList.add('active');
+
+            // Mark previous steps as completed
+            for (let i = 1; i < stepNumber; i++) {
+                document.getElementById(`step${i}Indicator`).classList.add('completed');
+            }
+
+            // If showing step 3, update summary
+            if (stepNumber === 3) {
+                updateSummary();
+            }
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateSummary() {
+            if (!selectedCourse) return;
+
+            document.getElementById('summaryCourse').textContent = selectedCourse.title;
+            document.getElementById('summaryInstructor').textContent = selectedCourse.instructor;
+            
+            const scheduleType = document.querySelector('input[name="scheduleType"]:checked').value;
+            document.getElementById('summaryScheduleType').textContent = 
+                scheduleType === 'recurring' ? 'Recurring Weekly' : 'Flexible';
+
+            document.getElementById('summaryDays').textContent = 
+                selectedDays.length > 0 ? selectedDays.join(', ') : 'Not selected';
+
+            document.getElementById('summaryTimes').textContent = 
+                selectedTimes.length > 0 ? selectedTimes.join(', ') : 'Not selected';
+
+            const duration = document.getElementById('sessionDuration').value;
+            document.getElementById('summaryDuration').textContent = `${duration} minutes`;
+
+            const startDate = document.getElementById('startDate').value;
+            document.getElementById('summaryStartDate').textContent = 
+                startDate ? new Date(startDate).toLocaleDateString() : 'Not selected';
+
+            // Calculate total (4 sessions per month)
+            const priceMatch = selectedCourse.price.match(/\$(\d+)/);
+            if (priceMatch) {
+                const total = parseInt(priceMatch[1]) * 4;
+                document.getElementById('summaryTotal').textContent = `$${total.toFixed(2)}`;
+            }
+        }
+
+        function confirmBooking() {
+            if (selectedDays.length === 0 || selectedTimes.length === 0) {
+                alert('Please select at least one day and one time slot.');
+                return;
+            }
+
+            const startDate = document.getElementById('startDate').value;
+            if (!startDate) {
+                alert('Please select a start date.');
+                return;
+            }
+
+            // Store booking data
+            const bookingData = {
+                course: selectedCourse,
+                scheduleType: document.querySelector('input[name="scheduleType"]:checked').value,
+                days: selectedDays,
+                times: selectedTimes,
+                duration: document.getElementById('sessionDuration').value,
+                startDate: startDate
+            };
+
+            localStorage.setItem('pendingBooking', JSON.stringify(bookingData));
+
+            // Redirect to payment page
+            alert('Great! Proceeding to payment...');
+            window.location.href = 'payment.html';
+        }
+
+        // Set minimum date to tomorrow
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            today.setDate(today.getDate() + 1);
+            const minDate = today.toISOString().split('T')[0];
+            document.getElementById('startDate').setAttribute('min', minDate);
+
+            loadEnrolledCourses();
+        });
+    </script>
+
+    <script src="js/jquery.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+</body>
+</html>

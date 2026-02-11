@@ -1,0 +1,293 @@
+/* dropdown-tabs.css - Custom styling for dropdown tabs */
+
+/* Dropdown Tabs Styling */
+.nav-tabs > li {
+    position: relative;
+}
+
+.nav-tabs > li > a .caret {
+    margin-left: 5px;
+    border-top: 4px solid;
+}
+
+.nav-tabs > li .dropdown-menu {
+    margin-top: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    min-width: 200px;
+    display: none;
+}
+
+.nav-tabs > li:hover .dropdown-menu {
+    display: block;
+}
+
+.nav-tabs > li.open .dropdown-menu {
+    display: block;
+}
+
+.nav-tabs > li .dropdown-menu li a {
+    padding: 8px 15px;
+    color: #333;
+    font-size: 14px;
+    text-decoration: none;
+    display: block;
+}
+
+.nav-tabs > li .dropdown-menu li a:hover {
+    background-color: #f5f5f5;
+    color: #ff6b6b;
+}
+
+/* Nested Tabs Styling */
+.tab-submenu {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.tab-submenu .nav-pills {
+    display: inline-flex;
+    background: #f8f9fa;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.tab-submenu .nav-pills li {
+    margin: 0 5px;
+    list-style: none;
+}
+
+.tab-submenu .nav-pills li a {
+    padding: 8px 15px;
+    color: #666;
+    border-radius: 3px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: block;
+}
+
+.tab-submenu .nav-pills li.active a,
+.tab-submenu .nav-pills li a:hover {
+    background: #ff6b6b;
+    color: white;
+}
+
+.tab-content-inner {
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    min-height: 300px;
+}
+
+.tab-content-inner .tab-pane {
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.tab-content-inner h4 {
+    color: #333;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ff6b6b;
+}
+
+.tab-content-inner ul {
+    padding-left: 20px;
+}
+
+.tab-content-inner ul li {
+    margin-bottom: 8px;
+    color: #555;
+}
+
+/* Make dropdown work on mobile */
+@media (max-width: 768px) {
+    .nav-tabs > li {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .nav-tabs > li .dropdown-menu {
+        position: static;
+        float: none;
+        width: 100%;
+        margin-top: 0;
+        box-shadow: none;
+        border: 1px solid #ddd;
+        background-color: #fff;
+    }
+    
+    .nav-tabs > li:hover .dropdown-menu {
+        display: none;
+    }
+    
+    .nav-tabs > li.open .dropdown-menu {
+        display: block;
+    }
+    
+    .nav-tabs > li > a .caret {
+        float: right;
+        margin-top: 8px;
+    }
+    
+    .tab-submenu .nav-pills {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .tab-submenu .nav-pills li {
+        margin-bottom: 5px;
+        flex: 1;
+        min-width: 100px;
+    }
+}
+
+/* Clickable product titles styling */
+.product-title-link {
+    color: inherit;
+    text-decoration: none;
+    display: block;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.product-title-link:hover {
+    color: #ff6b6b;
+    text-decoration: none;
+}
+
+.product-title-link h3,
+.product-title-link h4 {
+    transition: all 0.3s ease;
+    margin: 0;
+}
+
+.product-title-link:hover h3 {
+    color: #ff6b6b;
+}
+
+.product-title-link:hover h4 {
+    color: #777;
+}
+/* Navigation Dropdown Styles */
+.navbar-nav > li.dropdown > a .caret {
+    border-top: 4px solid;
+    margin-left: 5px;
+}
+
+.navbar-nav .dropdown-menu {
+    border-radius: 0;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-top: 0;
+    min-width: 220px;
+}
+
+.navbar-nav .dropdown-menu > li > a {
+    padding: 10px 20px;
+    color: #333;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.navbar-nav .dropdown-menu > li > a:hover {
+    background-color: #f8f9fa;
+    color: #ff6b6b;
+    padding-left: 25px;
+}
+
+/* Nested dropdown (submenu) */
+.navbar-nav .dropdown-submenu {
+    position: relative;
+}
+
+.navbar-nav .dropdown-submenu-toggle .caret {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-left: 4px solid;
+}
+
+.navbar-nav .dropdown-submenu:hover .dropdown-submenu {
+    display: block;
+}
+
+.navbar-nav .dropdown-submenu .dropdown-submenu {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    display: none;
+    background: white;
+    min-width: 200px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.navbar-nav .dropdown-submenu:hover > .dropdown-submenu {
+    display: block;
+}
+
+/* Filter links for portfolio */
+.filter-link {
+    cursor: pointer;
+}
+
+/* Smooth scroll active state */
+.navbar-nav li.active > a {
+    color: #ff6b6b !important;
+    background-color: transparent;
+}
+
+/* Mobile navigation adjustments */
+@media (max-width: 768px) {
+    .navbar-nav .dropdown-menu {
+        position: static;
+        float: none;
+        width: 100%;
+        box-shadow: none;
+        border: 1px solid #eee;
+        margin-top: 0;
+    }
+    
+    .navbar-nav .dropdown-submenu .dropdown-submenu {
+        position: static;
+        left: 0;
+        box-shadow: none;
+        border-left: 2px solid #eee;
+        margin-left: 15px;
+    }
+    
+    .navbar-nav .dropdown-submenu-toggle .caret {
+        transform: translateY(-50%) rotate(90deg);
+    }
+    
+    .navbar-nav .dropdown-menu > li > a {
+        padding: 8px 15px 8px 25px;
+    }
+    
+    .navbar-nav .dropdown-submenu .dropdown-submenu > li > a {
+        padding-left: 35px;
+    }
+}
+
+/* Cart badge styling */
+.cart-link {
+    position: relative;
+}
+
+.cart-link .badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 10px;
+    padding: 2px 5px;
+    min-width: 16px;
+}
